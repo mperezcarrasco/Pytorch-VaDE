@@ -34,7 +34,7 @@ class TrainerVaDE:
         self.autoencoder.apply(weights_init_normal) #intializing weights using normal distribution.
         self.autoencoder.train()
         print('Training the autoencoder...')
-        for epoch in range(50):
+        for epoch in range(30):
             total_loss = 0
             for x, _ in self.dataloader:
                 optimizer.zero_grad()
@@ -65,19 +65,20 @@ class TrainerVaDE:
         """Saving the pretrained weights for the encoder, decoder, pi, mu, var.
         """
         print('Saving weights.')
-        state_dict = self.autoencoder.cpu().state_dict()
+        state_dict = self.autoencoder.state_dict()
 
         self.VaDE.load_state_dict(state_dict, strict=False)
-        self.VaDE.pi_prior.data = torch.from_numpy(self.gmm.weights_).float()
-        self.VaDE.mu_prior.data = torch.from_numpy(self.gmm.means_).float()
-        self.VaDE.log_var_prior.data = torch.log(torch.from_numpy(self.gmm.covariances_)).float()
+        self.VaDE.pi_prior.data = torch.from_numpy(self.gmm.weights_).float().to(self.device)
+        self.VaDE.mu_prior.data = torch.from_numpy(self.gmm.means_).float().to(self.device)
+        self.VaDE.log_var_prior.data = torch.log(torch.from_numpy(self.gmm.covariances_)).float().to(self.device)
         torch.save(self.VaDE.state_dict(), self.args.pretrained_path)    
 
     def train(self):
         """
         """
         if self.args.pretrain==True:
-            self.VaDE.load_state_dict(torch.load(self.args.pretrained_path))
+            self.VaDE.load_state_dict(torch.load(self.args.pretrained_path,
+                                                 map_location=self.device))
         else:
             self.VaDE.apply(weights_init_normal)
         self.optimizer = optim.Adam(self.VaDE.parameters(), lr=self.args.lr)

@@ -121,11 +121,11 @@ class TrainerVaDE:
                 loss = self.compute_loss(x, x_hat, mu, log_var, z)
                 total_loss += loss.item()
                 y_true.append(true.numpy())
-                y_pred.append(pred.cpu().detach().numpy())
+                y_pred.extend(pred.cpu().detach().numpy())
             
-            print(np.stack(y_true, axis=0), np.stack(y_pred, axis=0))
+            print(np.array(y_true, np.array(y_pred))
 
-            acc = self.cluster_acc(np.stack(y_true, axis=0), np.stack(y_pred, axis=0))
+            acc = self.cluster_acc(np.array(y_true), np.array(y_pred))
             print('Testing VaDE... Epoch: {}, Loss: {}, Acc: {}'.format(epoch, total_loss, acc))
 
 

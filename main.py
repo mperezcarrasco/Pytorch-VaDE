@@ -29,7 +29,7 @@ if __name__ == '__main__':
                                              shuffle=True, num_workers=0)
     
     vade = TrainerVaDE(args, device, dataloader)
-    if args.pretrain==True:
-        vade.pretrain()
+    #if args.pretrain==True:
+    #    vade.pretrain()
     vade.train()
 

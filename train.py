@@ -71,9 +71,7 @@ class TrainerVaDE:
         self.VaDE.pi_prior.data = torch.from_numpy(self.gmm.weights_).float()
         self.VaDE.mu_prior.data = torch.from_numpy(self.gmm.means_).float()
         self.VaDE.log_var_prior.data = torch.log(torch.from_numpy(self.gmm.covariances_)).float()
-        torch.save(self.VaDE.state_dict(), self.args.pretrained_path)
-        print(torch.from_numpy(self.gmm.weights_).float())
-    
+        torch.save(self.VaDE.state_dict(), self.args.pretrained_path)    
 
     def train(self):
         """
@@ -153,7 +151,7 @@ class TrainerVaDE:
         h += self.VaDE.log_var_prior
         h += torch.Tensor([np.log(np.pi*2)]).to(self.device); print(np.log(np.pi*2))
         print( 0.5 * torch.sum(h, dim=2, keepdim=True))
-        p_z_c = torch.exp(torch.log(p_c + 1e-9).unsqueeze(0) - 0.5 * torch.sum(h, dim=2, keepdim=True))
+        p_z_c = torch.exp(torch.log(p_c + 1e-9).unsqueeze(0) - 0.5 * torch.sum(h, dim=2))
         print(p_z_c, p_z_c.shape)
         print(torch.log(p_c + 1e-9).unsqueeze(0))
         gamma = p_z_c / torch.sum(p_z_c, dim=1, keepdim=True)

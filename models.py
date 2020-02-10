@@ -51,7 +51,7 @@ class VaDE(torch.nn.Module):
 
 class Autoencoder(torch.nn.Module):
     def __init__(self, in_dim=784, latent_dim=10):
-    super(Autoencoder, self).__init__()
+        super(Autoencoder, self).__init__()
         self.fc1 = nn.Linear(in_dim, 512) #Encoder
         self.fc2 = nn.Linear(512, 512)
         self.fc3 = nn.Linear(512, 2048) 

@@ -84,7 +84,7 @@ class TrainerVaDE:
         lr_scheduler = torch.optim.lr_scheduler.StepLR(
                     self.optimizer, step_size=10, gamma=0.9)
         print('Training VaDE...')
-        for epoch in self.args.epochs:
+        for epoch in range(self.args.epochs):
             self.train_VaDE(epoch)
             self.test_VaDE(epoch)
             lr_scheduler.step()

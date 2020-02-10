@@ -20,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--pretrained_path', type=str, default='weights/pretrained_parameter.pth',
                         help='Output path')
     parser.add_argument('--dataset', type=str, default='mnist',
-                        choices=['mnist', 'webcam']
+                        choices=['mnist', 'webcam'],
                         help='Dataset to be used for training')
     args = parser.parse_args()
 

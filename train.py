@@ -105,7 +105,7 @@ class TrainerVaDE:
             self.optimizer.step()
             total_loss += loss.item()
             print('After backward: {}'.format(self.VaDE.pi_prior))
-        print('Training VaDE... Epoch: {}, Loss: {}'.format(epoch, total_loss))
+        print('Training VaDE... Epoch: {}, Loss: {}'.format(epoch, total_loss/len(dataloader)))
 
 
     def test_VaDE(self, epoch):
@@ -124,7 +124,8 @@ class TrainerVaDE:
                 y_pred.extend(pred.cpu().detach().numpy())
 
             acc = self.cluster_acc(np.array(y_true), np.array(y_pred))
-            print('Testing VaDE... Epoch: {}, Loss: {}, Acc: {}'.format(epoch, total_loss, acc[0]))
+            print('Testing VaDE... Epoch: {}, Loss: {}, Acc: {}'.format(epoch, 
+                  total_loss/len(dataloader), acc[0]))
 
 
     def compute_loss(self, x, x_hat, mu, log_var, z):

@@ -1,10 +1,10 @@
 import math
 import torch
+import numpy as np
 from torch import optim
 import torch.nn.functional as F
 from sklearn.mixture import GaussianMixture
 from sklearn.utils.linear_assignment_ import linear_assignment
-
 
 from models import Autoencoder, VaDE
 
@@ -143,7 +143,7 @@ class TrainerVaDE:
 
         print(log_p_x_given_z , log_p_z_given_c , log_p_c ,  log_q_c_given_x , log_q_z_given_x)
 
-        loss = log_p_x_given_z + log_p_z_given_c + log_p_c -  log_q_c_given_x - log_q_z_given_x
+        loss = log_p_x_given_z + log_p_z_given_c - log_p_c +  log_q_c_given_x - log_q_z_given_x
         loss /= x.size(0)
         return loss
     
@@ -159,7 +159,7 @@ class TrainerVaDE:
     def cluster_acc(self, real, pred):
         D = max(pred.max(), real.max())+1
         w = np.zeros((D,D), dtype=np.int64)
-        for i in range(Y_pred.size):
+        for i in range(pred.size):
             w[pred[i], real[i]] += 1
         ind = linear_assignment(w.max() - w)
         return sum([w[i,j] for i,j in ind])*1.0/pred.size, w

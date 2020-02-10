@@ -35,6 +35,6 @@ if __name__ == '__main__':
     
     vade = TrainerVaDE(args, device, dataloader, dataloader_test)
     if args.pretrain==True:
-        vade.pretrian()
+        vade.pretrain()
     vade.train()
 

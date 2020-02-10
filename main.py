@@ -3,7 +3,7 @@ import torch.utils.data
 from torchvision import datasets, transforms
 
 from train import TrainerVaDE
-
+from preprocess import get_mnist
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -23,13 +23,10 @@ if __name__ == '__main__':
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    dataset = datasets.MNIST('./data', train=True, download=True,
-                             transform=transforms.ToTensor())
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, 
-                                             shuffle=True, num_workers=0)
+    dataloader = get_mnist(batch_size=args.batch_size)
     
     vade = TrainerVaDE(args, device, dataloader)
-    #if args.pretrain==True:
-    #    vade.pretrain()
+    if args.pretrain==True:
+        vade.pretrain()
     vade.train()
 

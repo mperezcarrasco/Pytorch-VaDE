@@ -38,7 +38,7 @@ class TrainerVaDE:
             total_loss = 0
             for x, _ in self.dataloader:
                 optimizer.zero_grad()
-                x = x.to(self.device).view(-1, 784)
+                x = x.to(self.device)
                 x_hat = self.autoencoder(x)
                 loss = F.binary_cross_entropy(x_hat, x, reduction='mean') # just reconstruction
                 loss.backward()
@@ -97,7 +97,7 @@ class TrainerVaDE:
         total_loss = 0
         for x, _ in self.dataloader:
             self.optimizer.zero_grad()
-            x = x.to(self.device).view(-1, 784)
+            x = x.to(self.device)
             x_hat, mu, log_var, z = self.VaDE(x)
             #print('Before backward: {}'.format(self.VaDE.pi_prior))
             loss = self.compute_loss(x, x_hat, mu, log_var, z)
@@ -114,7 +114,7 @@ class TrainerVaDE:
             total_loss = 0
             y_true, y_pred = [], []
             for x, true in self.dataloader:
-                x = x.to(self.device).view(-1, 784)
+                x = x.to(self.device)
                 x_hat, mu, log_var, z = self.VaDE(x)
                 gamma = self.compute_gamma(z, self.VaDE.pi_prior)
                 pred = torch.argmax(gamma, dim=1)

@@ -109,7 +109,7 @@ class TrainerVaDE:
     def test_VaDE(self, epoch):
         self.VaDE.eval()
 
-        gain = torch.zeros((10,10), dtype=torch.int, device=device)
+        gain = torch.zeros((10,10), dtype=torch.int, device=self.device)
         with torch.no_grad():
             total_loss = 0
             for x, y_true in self.dataloader_test:

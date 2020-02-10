@@ -4,7 +4,7 @@ from torch import optim
 from munkres import Munkres
 import torch.nn.functional as F
 from sklearn.mixture import GaussianMixture
-  from sklearn.utils.linear_assignment_ import linear_assignment
+from sklearn.utils.linear_assignment_ import linear_assignment
 
 
 from models import Autoencoder, VaDE
@@ -154,10 +154,9 @@ class TrainerVaDE:
         return gamma
 
     def cluster_acc(self, real, pred):
-        assert Y_pred.size == Y.size
-        D = max(Y_pred.max(), Y.max())+1
+        D = max(pred.max(), real.max())+1
         w = np.zeros((D,D), dtype=np.int64)
         for i in range(Y_pred.size):
-            w[Y_pred[i], Y[i]] += 1
+            w[pred[i], real[i]] += 1
         ind = linear_assignment(w.max() - w)
-        return sum([w[i,j] for i,j in ind])*1.0/Y_pred.size, w
+        return sum([w[i,j] for i,j in ind])*1.0/pred.size, w

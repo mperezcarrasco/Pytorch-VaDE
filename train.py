@@ -115,7 +115,7 @@ class TrainerVaDE:
             for x, y_true in self.dataloader_test:
                 x, y_true = x.to(self.device).view(-1, 784), y_true.to(self.device)
                 x_hat, mu, log_var, z = self.VaDE(x)
-                gamma = self.compute_gamma(z)
+                gamma = self.compute_gamma(z, torch.softmax(self.VaDE.pi_prior, dim=0))
                 y_pred = torch.argmax(gamma, dim=1)
                 loss = self.compute_loss(x, x_hat, mu, log_var, z)
                 total_loss += loss.item()

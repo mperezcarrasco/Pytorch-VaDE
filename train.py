@@ -123,9 +123,9 @@ class TrainerVaDE:
                 y_true.append(true.numpy())
                 y_pred.append(pred.cpu().detach().numpy())
             
-            print(np.array(y_true), np.array(y_pred))
+            print(np.stack(y_true, axis=0), np.stack(y_pred, axis=0))
 
-            acc = cluster_acc(y_true, y_pred)
+            acc = self.cluster_acc(np.stack(y_true, axis=0, np.stack(y_pred, axis=0))
             print('Testing VaDE... Epoch: {}, Loss: {}, Acc: {}'.format(epoch, total_loss, acc))
 
 

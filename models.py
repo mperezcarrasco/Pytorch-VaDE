@@ -44,7 +44,7 @@ class VaDE(torch.nn.Module):
 
     def forward(self, x):
         mu, log_var = self.encode(x)
-        z = self.reparametrze(mu, log_var)
+        z = self.reparameterize(mu, log_var)
         x_hat = self.decode(z)
         return x_hat, mu, log_var, z
 

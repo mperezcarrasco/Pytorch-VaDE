@@ -3,7 +3,7 @@ import torch.utils.data
 from torchvision import datasets, transforms
 
 from train import TrainerVaDE
-from preprocess import get_mnist
+from preprocess import get_mnist, get_webcam
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

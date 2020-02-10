@@ -112,7 +112,7 @@ class TrainerVaDE:
         gain = torch.zeros((10,10), dtype=torch.int, device=self.device)
         with torch.no_grad():
             total_loss = 0
-            for x, y_true in self.dataloader_test:
+            for x, y_true in self.dataloader:
                 x, y_true = x.to(self.device).view(-1, 784), y_true.to(self.device)
                 x_hat, mu, log_var, z = self.VaDE(x)
                 gamma = self.compute_gamma(z, torch.softmax(self.VaDE.pi_prior, dim=0))

@@ -24,7 +24,7 @@ def get_mnist(data_dir='./data/mnist/', batch_size=128):
 def get_webcam(data_dir='./data/office31/webcam/images/', batch_size=128):
     data = datasets.ImageFolder(data_dir)
 
-    x = np.array([np.array(target_data[i][0]) for i in range(len(target_data))])
+    x = np.array([np.array(data[i][0]) for i in range(len(data))])
     y = np.array([data[i][1] for i in range(len(data))])
 
     data = CaffeTransform(x, y)

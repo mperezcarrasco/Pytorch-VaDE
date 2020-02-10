@@ -1,7 +1,6 @@
 import math
 import torch
 from torch import optim
-from munkres import Munkres
 import torch.nn.functional as F
 from sklearn.mixture import GaussianMixture
 from sklearn.utils.linear_assignment_ import linear_assignment
@@ -109,22 +108,22 @@ class TrainerVaDE:
 
     def test_VaDE(self, epoch):
         self.VaDE.eval()
-
-        gain = torch.zeros((10,10), dtype=torch.int, device=self.device)
         with torch.no_grad():
             total_loss = 0
-            for x, y_true in self.dataloader:
-                x, y_true = x.to(self.device).view(-1, 784), y_true.to(self.device)
+            y_true, y_pred = [], []
+            for x, true in self.dataloader:
+                x = x.to(self.device).view(-1, 784)
                 x_hat, mu, log_var, z = self.VaDE(x)
                 gamma = self.compute_gamma(z, self.VaDE.pi_prior)
-                y_pred = torch.argmax(gamma, dim=1)
+                pred = torch.argmax(gamma, dim=1)
                 loss = self.compute_loss(x, x_hat, mu, log_var, z)
                 total_loss += loss.item()
-                for true, pred in zip(y_true, y_pred):
-                        gain[true, pred] += 1
-            cost = (torch.max(gain) - gain).cpu().numpy()
-            assign = Munkres().compute(cost)
-            acc = torch.sum(gain[tuple(zip(*assign))]).float() / torch.sum(gain)
+                y_true.append(true.numpy())
+                y_pred.append(pred.cpu().detach().numpy())
+            
+            print(np.array(y_true), np.array(y_pred))
+
+            acc = cluster_acc(y_true, y_pred)
             print('Testing VaDE... Epoch: {}, Loss: {}, Acc: {}'.format(epoch, total_loss, acc))
 
 

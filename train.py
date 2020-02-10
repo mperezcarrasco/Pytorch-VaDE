@@ -99,12 +99,12 @@ class TrainerVaDE:
             self.optimizer.zero_grad()
             x = x.to(self.device)
             x_hat, mu, log_var, z = self.VaDE(x)
-            #print('Before backward: {}'.format(self.VaDE.pi_prior))
+            print('Before backward: {}'.format(self.VaDE.pi_prior))
             loss = self.compute_loss(x, x_hat, mu, log_var, z)
             loss.backward()
             self.optimizer.step()
             total_loss += loss.item()
-            #print('After backward: {}'.format(self.VaDE.pi_prior))
+            print('After backward: {}'.format(self.VaDE.pi_prior))
         print('Training VaDE... Epoch: {}, Loss: {}'.format(epoch, total_loss))
 
 
@@ -128,7 +128,7 @@ class TrainerVaDE:
 
 
     def compute_loss(self, x, x_hat, mu, log_var, z):
-        p_c = F.softmax(self.VaDE.pi_prior)
+        p_c = self.VaDE.pi_prior
         gamma = self.compute_gamma(z, p_c)
 
         log_p_x_given_z = F.binary_cross_entropy(x_hat, x, reduction='sum')

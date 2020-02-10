@@ -51,6 +51,7 @@ class TrainerVaDE:
             total_loss = 0
             for x, _ in self.dataloader:
                 optimizer.zero_grad()
+                x = x.to(self.device)
                 if self.args.dataset == 'webcam':
                     x = self.feature_extractor(x)
                     x = x.detach()

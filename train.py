@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from sklearn.mixture import GaussianMixture
 from sklearn.utils.linear_assignment_ import linear_assignment
 
-from models import Autoencoder, VaDE
+from models_office import Autoencoder, VaDE
 
 
 def weights_init_normal(m):
@@ -18,8 +18,23 @@ class TrainerVaDE:
     """This is the trainer for the Variational Deep Embedding (VaDE).
     """
     def __init__(self, args, device, dataloader):
-        self.autoencoder = Autoencoder().to(device)
-        self.VaDE = VaDE().to(device)
+        if args.dataset == 'mnist':
+            from models import Autoencoder, VaDE
+            self.autoencoder = Autoencoder().to(device)
+            self.VaDE = VaDE().to(device)
+        elif args.dataset == 'webcam':
+            from models_office import Autoencoder, VaDE, feature_extractor
+            self.autoencoder = Autoencoder().to(device)
+            checkpoint = torch.load('weights/source_parameters.pth.tar',
+                                    map_location=device)
+            self.autoencoder.load_state_dict(checkpoint['state_dict'], strict=False)
+            checkpoint = torch.load('weights/feature_extractor_params.pth.tar',
+                                     map_location=device)
+            self.feature_extractor = feature_extractor().to(device)
+            self.feature_extractor.load_state_dict(checkpoint['state_dict'])
+            self.freeze_extractor()
+            self.VaDE = VaDE().to(device)
+
         self.dataloader = dataloader
         self.device = device
         self.args = args
@@ -38,7 +53,9 @@ class TrainerVaDE:
             total_loss = 0
             for x, _ in self.dataloader:
                 optimizer.zero_grad()
-                x = x.to(self.device)
+                if self.args.dataset == 'webcam':
+                    x = self.feature_extractor(x)
+                    x = x.detach()
                 x_hat = self.autoencoder(x)
                 loss = F.binary_cross_entropy(x_hat, x, reduction='mean') # just reconstruction
                 loss.backward()
@@ -56,6 +73,9 @@ class TrainerVaDE:
         """
         print('Fiting Gaussian Mixture Model...')
         x = torch.cat([data[0] for data in self.dataloader]).view(-1, 784).to(self.device) #all x samples.
+        if self.args.dataset == 'webcam':
+            x = self.feature_extractor(x)
+            x = x.detach()
         z = self.autoencoder.encode(x)
         self.gmm = GaussianMixture(n_components=10, covariance_type='diag')
         self.gmm.fit(z.cpu().detach().numpy())
@@ -98,13 +118,14 @@ class TrainerVaDE:
         for x, _ in self.dataloader:
             self.optimizer.zero_grad()
             x = x.to(self.device)
+            if self.args.dataset == 'webcam':
+                x = self.feature_extractor(x)
+                x = x.detach()
             x_hat, mu, log_var, z = self.VaDE(x)
-            #print('Before backward: {}'.format(self.VaDE.pi_prior))
             loss = self.compute_loss(x, x_hat, mu, log_var, z)
             loss.backward()
             self.optimizer.step()
             total_loss += loss.item()
-            #print('After backward: {}'.format(self.VaDE.pi_prior))
         print('Training VaDE... Epoch: {}, Loss: {}'.format(epoch, total_loss))
 
 
@@ -115,6 +136,9 @@ class TrainerVaDE:
             y_true, y_pred = [], []
             for x, true in self.dataloader:
                 x = x.to(self.device)
+                if self.args.dataset == 'webcam':
+                    x = self.feature_extractor(x)
+                    x = x.detach()
                 x_hat, mu, log_var, z = self.VaDE(x)
                 gamma = self.compute_gamma(z, self.VaDE.pi_prior)
                 pred = torch.argmax(gamma, dim=1)
@@ -158,3 +182,8 @@ class TrainerVaDE:
             w[pred[i], real[i]] += 1
         ind = linear_assignment(w.max() - w)
         return sum([w[i,j] for i,j in ind])*1.0/pred.size*100, w
+
+    def freeze_extractor(self):
+        for _, param in self.feature_extractor.named_parameters():
+            param.requires_grad = False
+        self.feature_extractor.eval()

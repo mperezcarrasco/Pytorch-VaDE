@@ -74,7 +74,7 @@ class TrainerVaDE:
         torch.save(self.VaDE.state_dict(), self.args.pretrained_path)    
 
     def train(self):
-        """
+        """Training the VaDE
         """
         if self.args.pretrain==True:
             self.VaDE.load_state_dict(torch.load(self.args.pretrained_path,
@@ -83,7 +83,7 @@ class TrainerVaDE:
             self.VaDE.apply(weights_init_normal)
         self.optimizer = optim.Adam(self.VaDE.parameters(), lr=self.args.lr)
         lr_scheduler = torch.optim.lr_scheduler.StepLR(
-                    self.optimizer, step_size=10, gamma=0.9)
+                    self.optimizer, step_size=10, gamma=0.95)
         print('Training VaDE...')
         for epoch in range(self.args.epochs):
             self.train_VaDE(epoch)

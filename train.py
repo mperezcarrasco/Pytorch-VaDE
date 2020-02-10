@@ -120,10 +120,8 @@ class TrainerVaDE:
                 pred = torch.argmax(gamma, dim=1)
                 loss = self.compute_loss(x, x_hat, mu, log_var, z)
                 total_loss += loss.item()
-                y_true.append(true.numpy())
+                y_true.extend(true.numpy())
                 y_pred.extend(pred.cpu().detach().numpy())
-            
-            print(np.array(y_true), np.array(y_pred))
 
             acc = self.cluster_acc(np.array(y_true), np.array(y_pred))
             print('Testing VaDE... Epoch: {}, Loss: {}, Acc: {}'.format(epoch, total_loss, acc))

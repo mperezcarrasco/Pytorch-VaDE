@@ -140,7 +140,8 @@ class TrainerVaDE:
         log_q_c_given_x = torch.mean(torch.sum(gamma * torch.log(gamma + 1e-9), dim=1))
         log_q_z_given_x = 0.5 * torch.mean(torch.sum(1 + log_var, dim=1))
         loss = log_p_x_given_z + log_p_z_given_c - log_p_c + log_q_c_given_x - log_q_z_given_x
-
+        print(log_p_x_given_z, log_p_z_given_c , log_p_c , log_q_c_given_x , log_q_z_given_x)
+        print(loss)
         return loss
     
     def compute_gamma(self, z, p_c):

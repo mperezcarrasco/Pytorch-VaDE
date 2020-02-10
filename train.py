@@ -99,10 +99,12 @@ class TrainerVaDE:
             self.optimizer.zero_grad()
             x = x.to(self.device).view(-1, 784)
             x_hat, mu, log_var, z = self.VaDE(x)
+            print('Before backward: {}'.format(self.VaDE.pi_prior))
             loss = self.compute_loss(x, x_hat, mu, log_var, z)
             loss.backward()
             self.optimizer.step()
             total_loss += loss.item()
+            print('After backward: {}'.format(self.VaDE.pi_prior))
         print('Training VaDE... Epoch: {}, Loss: {}'.format(epoch, total_loss))
 
 
@@ -130,7 +132,7 @@ class TrainerVaDE:
     def compute_loss(self, x, x_hat, mu, log_var, z):
         p_c = self.VaDE.pi_prior
         gamma = self.compute_gamma(z, p_c)
-        print(p_c, torch.log(p_c + 1e-9))
+
         log_p_x_given_z = F.binary_cross_entropy(x_hat, x, reduction='sum')
         h = log_var.exp().unsqueeze(1) + (mu.unsqueeze(1) - self.VaDE.mu_prior).pow(2)
         h = torch.sum(self.VaDE.log_var_prior + h / self.VaDE.log_var_prior.exp(), dim=2)
@@ -138,7 +140,9 @@ class TrainerVaDE:
         log_p_c = torch.sum(gamma * torch.log(p_c + 1e-9))
         log_q_c_given_x = torch.sum(gamma * torch.log(gamma + 1e-9))
         log_q_z_given_x = 0.5 * torch.sum(1 + log_var)
+
         print(log_p_x_given_z , log_p_z_given_c , log_p_c ,  log_q_c_given_x , log_q_z_given_x)
+
         loss = log_p_x_given_z + log_p_z_given_c + log_p_c -  log_q_c_given_x - log_q_z_given_x
         loss /= x.size(0)
         return loss

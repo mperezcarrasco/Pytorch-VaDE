@@ -25,7 +25,7 @@ class TrainerVaDE:
         elif args.dataset == 'webcam':
             from models_office import Autoencoder, VaDE, feature_extractor
             self.autoencoder = Autoencoder().to(device)
-            checkpoint = torch.load('weights/source_parameters.pth.tar',
+            checkpoint = torch.load('weights/imagenet_params.pth.tar.pth.tar',
                                     map_location=device)
             self.autoencoder.load_state_dict(checkpoint['state_dict'], strict=False)
             checkpoint = torch.load('weights/feature_extractor_params.pth.tar',

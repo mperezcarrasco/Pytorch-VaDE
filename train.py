@@ -171,8 +171,8 @@ class TrainerVaDE:
         h += self.VaDE.log_var_prior
         h += torch.Tensor([np.log(np.pi*2)]).to(self.device)
         p_z_c = torch.exp(torch.log(p_c + 1e-9).unsqueeze(0) - 0.5 * torch.sum(h, dim=2))
-        print(p_z_c)
-        gamma = p_z_c / torch.sum(p_z_c, dim=1, keepdim=True)
+        print(torch.log(p_c + 1e-9))
+        gamma = p_z_c / torch.sum(p_z_c + 1e-9, dim=1, keepdim=True)
         return gamma
 
     def cluster_acc(self, real, pred):

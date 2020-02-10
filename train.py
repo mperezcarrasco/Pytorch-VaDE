@@ -148,7 +148,7 @@ class TrainerVaDE:
         return loss
     
     def compute_gamma(self, z, p_c):
-        h = (z.unsqueeze(1) - self.VaDE.mu_prior).pow(2) / self.VaDE.log_var_prior.exp(); print(z, z.unsqueeze(1))
+        h = (z.unsqueeze(1) - self.VaDE.mu_prior).pow(2) / self.VaDE.log_var_prior.exp(); print(z.shape, z.unsqueeze(1).shape)
         h += self.VaDE.log_var_prior; print(h.shape)
         h += np.log(np.pi*2); print(h.shape, torch.sum(h, dim=2).shape)
         p_z_c = torch.exp(torch.log(p_c).unsqueeze(0) - 0.5 * torch.sum(h, dim=2)); print( p_z_c.shape, torch.log(p_c).shape)

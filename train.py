@@ -55,7 +55,7 @@ class TrainerVaDE:
         the priors (pi, mu, var) of the VaDE model.
         """
         print('Fiting Gaussian Mixture Model...')
-        x = torch.cat([data[0] for data in self.dataloader]).view(-1, 784).to(self.device) #all x samples.
+        x = torch.cat([data[0] for data in self.dataloader]).to(self.device) #all x samples.
         z = self.autoencoder.encode(x)
         self.gmm = GaussianMixture(n_components=10, covariance_type='diag')
         self.gmm.fit(z.cpu().detach().numpy())

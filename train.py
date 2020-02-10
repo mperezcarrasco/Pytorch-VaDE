@@ -129,7 +129,7 @@ class TrainerVaDE:
 
     def compute_loss(self, x, x_hat, mu, log_var, z):
         p_c = torch.softmax(self.VaDE.pi_prior, dim=0)
-        gamma = self.compute_gamma(z, pi_c)
+        gamma = self.compute_gamma(z, p_c)
 
         log_p_x_given_z = F.binary_cross_entropy(x_hat, x, reduction='sum')
         h = log_var.exp().unsqueeze(1) + (mu.unsqueeze(1) - self.VaDE.mu_prior).pow(2)

@@ -4,6 +4,8 @@ from torch import optim
 from munkres import Munkres
 import torch.nn.functional as F
 from sklearn.mixture import GaussianMixture
+  from sklearn.utils.linear_assignment_ import linear_assignment
+
 
 from models import Autoencoder, VaDE
 
@@ -127,9 +129,9 @@ class TrainerVaDE:
 
 
     def compute_loss(self, x, x_hat, mu, log_var, z):
-        p_c = torch.softmax(self.VaDE.pi_prior, dim=0)
+        p_c = self.VaDE.pi_prior
         gamma = self.compute_gamma(z, p_c)
-
+        print(p_c, torch.log(p_c + 1e-9))
         log_p_x_given_z = F.binary_cross_entropy(x_hat, x, reduction='sum')
         h = log_var.exp().unsqueeze(1) + (mu.unsqueeze(1) - self.VaDE.mu_prior).pow(2)
         h = torch.sum(self.VaDE.log_var_prior + h / self.VaDE.log_var_prior.exp(), dim=2)
@@ -150,3 +152,12 @@ class TrainerVaDE:
         p_z_c = p_z_given_c * p_c
         gamma = p_z_c / torch.sum(p_z_c, dim=1, keepdim=True)
         return gamma
+
+    def cluster_acc(self, real, pred):
+        assert Y_pred.size == Y.size
+        D = max(Y_pred.max(), Y.max())+1
+        w = np.zeros((D,D), dtype=np.int64)
+        for i in range(Y_pred.size):
+            w[Y_pred[i], Y[i]] += 1
+        ind = linear_assignment(w.max() - w)
+        return sum([w[i,j] for i,j in ind])*1.0/Y_pred.size, w

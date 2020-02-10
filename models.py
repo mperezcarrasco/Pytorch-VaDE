@@ -46,7 +46,7 @@ class VaDE(torch.nn.Module):
         mu, log_var = self.encode(x)
         z = reparametrze(mu, log_var)
         x_hat = self.decode(z)
-        return x_hat, mu, log_var
+        return x_hat, mu, log_var, z
 
 
 class Autoencoder(torch.nn.Module):

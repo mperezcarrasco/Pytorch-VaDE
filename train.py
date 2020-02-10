@@ -1,5 +1,6 @@
 import torch
 from torch import optim
+from munkres import Munkres
 import torch.nn.functional as F
 from sklearn.mixture import GaussianMixture
 
@@ -94,8 +95,8 @@ class TrainerVaDE:
         for x, _ in self.dataloader:
             self.optimizer.zero_grad()
             x = x.to(self.device).view(-1, 784)
-            x_hat, mu, log_var = self.VaDE(x)
-            loss = self.compute_loss(x, x_hat, mu, log_var)
+            x_hat, mu, log_var, z = self.VaDE(x)
+            loss = self.compute_loss(x, x_hat, mu, log_var, z)
             loss.backward()
             self.optimizer.step()
             total_loss += loss.item()
@@ -105,21 +106,45 @@ class TrainerVaDE:
     def test_VaDE(self, epoch):
         self.VaDE.eval()
 
+        gain = torch.zeros((10,10), dtype=torch.int, device=device)
         with torch.no_grad():
             total_loss = 0
-            for x, _ in self.dataloader_test:
-                x = x.to(self.device).view(-1, 784)
-                x_hat, mu, log_var = self.VaDE(x)
-                loss = self.compute_loss(x, x_hat, mu, log_var)
+            for x, y_true in self.dataloader_test:
+                x, y_true = x.to(self.device).view(-1, 784), y_true.to(self.device)
+                x_hat, mu, log_var, z = self.VaDE(x)
+                gamma = self.compute_gamma(z)
+                y_pred = torch.argmax(gamma, dim=1)
+                loss = self.compute_loss(x, x_hat, mu, log_var, z)
                 total_loss += loss.item()
-            print('Testing VaDE... Epoch: {}, Loss: {}'.format(epoch, total_loss))
+                for true, pred in zip(y_true, y_pred):
+                        gain[true, pred] += 1
+            cost = (torch.max(gain) - gain).cpu().numpy()
+            assign = Munkres().compute(cost)
+            acc = torch.sum(gain[tuple(zip(*assign))]).float() / torch.sum(gain)
+            print('Testing VaDE... Epoch: {}, Loss: {}, Acc: {}'.format(epoch, total_loss, acc))
 
 
-    def compute_loss(self, x, x_hat, mu, log_var):
+    def compute_loss(self, x, x_hat, mu, log_var, z):
+        gamma = self.compute_gamma(z)
 
+        log_p_x_given_z = F.binary_cross_entropy(x_hat, x, reduction='mean')
+        h = logvar.exp().unsqueeze(1) + (mu.unsqueeze(1) - self.VaDE.mu_prior).pow(2)
+        h = torch.sum(self.VaDE.log_var_prior + h / self.VaDE.log_var_prior.exp(), dim=2)
+        log_p_z_given_c = 0.5 * torch.sum(gamma * h)
+        log_p_c = torch.sum(gamma * torch.log(model.weights + 1e-9))
+        log_q_c_given_x = torch.sum(gamma * torch.log(gamma + 1e-9))
+        log_q_z_given_x = 0.5 * torch.sum(1 + logvar)
 
-        reconst_loss = F.binary_cross_entropy(x_hat, x, reduction='mean')
-
-        loss = reconst_loss
+        loss = log_p_x_given_z + log_p_z_given_c + log_p_c -  log_q_c_given_x - log_q_z_given_x
 
         return loss
+    
+    def compute_gamma(self, z):
+        h = z - self.VaDE.mu_prior
+        h = torch.exp(-0.5 * torch.sum((h * h / self.VaDE.log_var_prior.exp()), dim=2))
+        h = h / torch.sum(0.5 * self.VaDE.log_var_prior, dim=1).exp()
+        p_z_given_c = h / (2 * math.pi)
+        p_c = self.VaDE.pi_prior
+        p_z_c = p_z_given_c * p_c
+        gamma = p_z_c / torch.sum(p_z_c, dim=1, keepdim=True)
+        return gamma

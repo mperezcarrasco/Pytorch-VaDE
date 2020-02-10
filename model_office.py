@@ -47,7 +47,7 @@ class VaDE(nn.Module):
         h = F.relu(self.cnn7(h))
         return F.relu(self.cnn8(h))
 
-    def forward(self, phase, x, y=None, temperature=3., hard=True):
+    def forward(self, x):
         mu, log_var = self.encode(x)
         z = self.reparameterize(mu, log_var)
         x_reconst = self.decode(z)
@@ -84,7 +84,7 @@ class Autoencoder(nn.Module):
         h = F.relu(self.cnn7(h))
         return F.relu(self.cnn8(h))
 
-    def forward(self, phase, x, y=None, temperature=3., hard=True):
+    def forward(self, x):
         z = self.encode(x)
         x_reconst = self.decode(z)
         return x_reconst

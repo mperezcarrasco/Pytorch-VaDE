@@ -15,5 +15,5 @@ def get_mnist(data_dir='./data/mnist/',batch_size=128):
     dataset['y'] = y
 
     dataloader=DataLoader(TensorDataset(x,y), batch_size=batch_size, 
-                          shuffle=True, num_workers=0)
+                          shuffle=True, num_workers=4)
     return dataloader

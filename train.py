@@ -15,7 +15,7 @@ def weights_init_normal(m):
 class TrainerVaDE:
     """This is the trainer for the Variational Deep Embedding (VaDE).
     """
-    def __init__(self, args, device, dataloader):
+    def __init__(self, args, device, dataloader, n_classes):
         if args.dataset == 'mnist':
             from models import Autoencoder, VaDE
             self.autoencoder = Autoencoder().to(device)
@@ -36,6 +36,7 @@ class TrainerVaDE:
         self.dataloader = dataloader
         self.device = device
         self.args = args
+        self.n_classes = n_classes
 
 
     def pretrain(self):
@@ -56,7 +57,7 @@ class TrainerVaDE:
                     x = self.feature_extractor(x)
                     x = x.detach()
                 x_hat = self.autoencoder(x)
-                loss = F.mse_loss(x_hat, x, reduction='mean') # just reconstruction
+                loss = F.binary_cross_entropy(x_hat, x, reduction='mean') #reconstruction error
                 loss.backward()
                 optimizer.step()
                 total_loss += loss.item()
@@ -76,7 +77,7 @@ class TrainerVaDE:
             x = self.feature_extractor(x)
             x = x.detach()
         z = self.autoencoder.encode(x)
-        self.gmm = GaussianMixture(n_components=31, covariance_type='diag')
+        self.gmm = GaussianMixture(n_components=self.n_classes, covariance_type='diag')
         self.gmm.fit(z.cpu().detach().numpy())
 
 
@@ -154,7 +155,7 @@ class TrainerVaDE:
         p_c = self.VaDE.pi_prior
         gamma = self.compute_gamma(z, p_c)
 
-        log_p_x_given_z = F.mse_loss(x_hat, x, reduction='sum')
+        log_p_x_given_z = F.binary_cross_entropy(x_hat, x, reduction='sum')
         h = log_var.exp().unsqueeze(1) + (mu.unsqueeze(1) - self.VaDE.mu_prior).pow(2)
         h = torch.sum(self.VaDE.log_var_prior + h / self.VaDE.log_var_prior.exp(), dim=2)
         log_p_z_given_c = 0.5 * torch.sum(gamma * h)

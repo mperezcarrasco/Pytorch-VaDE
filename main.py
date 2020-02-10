@@ -28,10 +28,12 @@ if __name__ == '__main__':
 
     if args.dataset == 'mnist':
         dataloader = get_mnist(batch_size=args.batch_size)
+        n_classes = 10
     else:
         dataloader = get_webcam(batch_size=args.batch_size)
+        n_classes = 31
     
-    vade = TrainerVaDE(args, device, dataloader)
+    vade = TrainerVaDE(args, device, dataloader, n_classes)
     #if args.pretrain==True:
     #    vade.pretrain()
     vade.train()

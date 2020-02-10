@@ -36,7 +36,7 @@ def get_webcam(data_dir='./data/office31/webcam/images/', batch_size=128):
 
 class CaffeTransform(torch.utils.data.Dataset):
 
-    def __init__(self, X, y, train=True):
+    def __init__(self, X, y, train=False):
         super(CaffeTransform, self).__init__()
         self.X = X
         self.y = y

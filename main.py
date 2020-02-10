@@ -7,11 +7,11 @@ from train import TrainerVaDE
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epochs", type=int, default=5000,
+    parser.add_argument("--epochs", type=int, default=300,
                         help="number of iterations")
     parser.add_argument("--patience", type=int, default=50, 
                         help="Patience for Early Stopping")
-    parser.add_argument('--lr', type=float, default=0.002,
+    parser.add_argument('--lr', type=float, default=2e-3,
                         help='learning rate')
     parser.add_argument("--batch_size", type=int, default=100, 
                         help="Batch size")
@@ -27,14 +27,9 @@ if __name__ == '__main__':
                              transform=transforms.ToTensor())
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, 
                                              shuffle=True, num_workers=0)
-
-    dataset = datasets.MNIST('./data', train=False, download=True,
-                             transform=transforms.ToTensor())
-    dataloader_test = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, 
-                                                  shuffle=True, num_workers=0)
     
-    vade = TrainerVaDE(args, device, dataloader, dataloader_test)
-    #if args.pretrain==True:
-    #    vade.pretrain()
+    vade = TrainerVaDE(args, device, dataloader)
+    if args.pretrain==True:
+        vade.pretrain()
     vade.train()
 

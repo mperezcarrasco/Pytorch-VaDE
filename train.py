@@ -16,11 +16,10 @@ def weights_init_normal(m):
 class TrainerVaDE:
     """This is the trainer for the Variational Deep Embedding (VaDE).
     """
-    def __init__(self, args, device, dataloader, dataloader_test):
+    def __init__(self, args, device, dataloader):
         self.autoencoder = Autoencoder().to(device)
         self.VaDE = VaDE().to(device)
         self.dataloader = dataloader
-        self.dataloader_test = dataloader_test
         self.device = device
         self.args = args
 
@@ -34,7 +33,7 @@ class TrainerVaDE:
         self.autoencoder.apply(weights_init_normal) #intializing weights using normal distribution.
         self.autoencoder.train()
         print('Training the autoencoder...')
-        for epoch in range(20):
+        for epoch in range(50):
             total_loss = 0
             for x, _ in self.dataloader:
                 optimizer.zero_grad()
@@ -68,7 +67,7 @@ class TrainerVaDE:
         state_dict = self.autoencoder.cpu().state_dict()
 
         self.VaDE.load_state_dict(state_dict, strict=False)
-        self.VaDE.pi_prior.data = torch.log(torch.from_numpy(self.gmm.weights_)).float()
+        self.VaDE.pi_prior.data = torch.from_numpy(self.gmm.weights_).float()
         self.VaDE.mu_prior.data = torch.from_numpy(self.gmm.means_).float()
         self.VaDE.log_var_prior.data = torch.log(torch.from_numpy(self.gmm.covariances_)).float()
         torch.save(self.VaDE.state_dict(), self.args.pretrained_path)
@@ -115,7 +114,7 @@ class TrainerVaDE:
             for x, y_true in self.dataloader:
                 x, y_true = x.to(self.device).view(-1, 784), y_true.to(self.device)
                 x_hat, mu, log_var, z = self.VaDE(x)
-                gamma = self.compute_gamma(z, torch.softmax(self.VaDE.pi_prior, dim=0))
+                gamma = self.compute_gamma(z, self.VaDE.pi_prior)
                 y_pred = torch.argmax(gamma, dim=1)
                 loss = self.compute_loss(x, x_hat, mu, log_var, z)
                 total_loss += loss.item()

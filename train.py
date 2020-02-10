@@ -162,4 +162,4 @@ class TrainerVaDE:
         for i in range(pred.size):
             w[pred[i], real[i]] += 1
         ind = linear_assignment(w.max() - w)
-        return sum([w[i,j] for i,j in ind])*1.0/pred.size, w
+        return sum([w[i,j] for i,j in ind])*1.0/pred.size*100, w

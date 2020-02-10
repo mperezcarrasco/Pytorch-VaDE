@@ -151,7 +151,7 @@ class TrainerVaDE:
         h = (z.unsqueeze(1) - self.VaDE.mu_prior).pow(2) / self.VaDE.log_var_prior.exp(); print(self.VaDE.mu_prior.shape, h.shape)
         h += self.VaDE.log_var_prior; print(h.shape)
         h += np.log(np.pi*2); print(h.shape)
-        p_z_c = torch.exp(torch.log(p_c) - 0.5 * torch.sum(h)); print( p_z_c.shape)
+        p_z_c = torch.exp(torch.log(p_c) - 0.5 * torch.sum(h)); print( p_z_c.shape, torch.log(p_c).shape)
         gamma = p_z_c / torch.sum(p_z_c, dim=1, keepdim=True)
         return gamma
 

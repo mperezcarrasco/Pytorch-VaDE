@@ -23,7 +23,7 @@ class VaDE(torch.nn.Module):
         self.fc4 = nn.Linear(latent_dim, 2048) 
         self.fc5 = nn.Linear(2048, 512)
         self.fc6 = nn.Linear(512, 512)
-        self.fc7 = nn.Linear(512, data_dim) #Decoder
+        self.fc7 = nn.Linear(512, in_dim) #Decoder
 
     def encode(self, x):
         h = F.relu(self.fc1(x))
@@ -61,7 +61,7 @@ class Autoencoder(torch.nn.Module):
         self.fc4 = nn.Linear(latent_dim, 2048) 
         self.fc5 = nn.Linear(2048, 512)
         self.fc6 = nn.Linear(512, 512)
-        self.fc7 = nn.Linear(512, data_dim) #Decoder
+        self.fc7 = nn.Linear(512, in_dim) #Decoder
 
     def encode(self, x):
         h = F.relu(self.fc1(x))

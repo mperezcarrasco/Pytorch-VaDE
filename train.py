@@ -99,12 +99,12 @@ class TrainerVaDE:
             self.optimizer.zero_grad()
             x = x.to(self.device).view(-1, 784)
             x_hat, mu, log_var, z = self.VaDE(x)
-            print('Before backward: {}'.format(self.VaDE.pi_prior))
+            #print('Before backward: {}'.format(self.VaDE.pi_prior))
             loss = self.compute_loss(x, x_hat, mu, log_var, z)
             loss.backward()
             self.optimizer.step()
             total_loss += loss.item()
-            print('After backward: {}'.format(self.VaDE.pi_prior))
+            #print('After backward: {}'.format(self.VaDE.pi_prior))
         print('Training VaDE... Epoch: {}, Loss: {}'.format(epoch, total_loss))
 
 
@@ -124,7 +124,7 @@ class TrainerVaDE:
                 y_pred.extend(pred.cpu().detach().numpy())
 
             acc = self.cluster_acc(np.array(y_true), np.array(y_pred))
-            print('Testing VaDE... Epoch: {}, Loss: {}, Acc: {}'.format(epoch, total_loss, acc))
+            print('Testing VaDE... Epoch: {}, Loss: {}, Acc: {}'.format(epoch, total_loss, acc[0]))
 
 
     def compute_loss(self, x, x_hat, mu, log_var, z):

@@ -9,7 +9,7 @@ class VaDE(torch.nn.Module):
     def __init__(self, in_dim=784, latent_dim=10, n_classes=10):
         super(VaDE, self).__init__()
 
-        self.pi_prior = Parameter(torch.randn(n_classes))
+        self.pi_prior = Parameter(torch.ones(n_classes)/n_classes)
         self.mu_prior = Parameter(torch.randn(n_classes, latent_dim))
         self.log_var_prior = Parameter(torch.randn(n_classes, latent_dim))
         

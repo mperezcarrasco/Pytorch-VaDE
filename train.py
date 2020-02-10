@@ -6,8 +6,6 @@ import torch.nn.functional as F
 from sklearn.mixture import GaussianMixture
 from sklearn.utils.linear_assignment_ import linear_assignment
 
-from models_office import Autoencoder, VaDE
-
 
 def weights_init_normal(m):
     classname = m.__class__.__name__

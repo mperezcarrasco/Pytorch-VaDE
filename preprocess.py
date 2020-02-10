@@ -1,4 +1,6 @@
+import cv2
 import torch
+import numpy as np
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -22,8 +24,8 @@ def get_mnist(data_dir='./data/mnist/', batch_size=128):
 def get_webcam(data_dir='./data/office31/webcam/images/', batch_size=128):
     data = datasets.ImageFolder(data_dir)
 
-    x = torch.FloatTensor([data[i][1] for i in range(len(data))]))
-    y = torch.FloatTensor([data[i][0] for i in range(len(data))]))
+    x = np.array([data[i][1] for i in range(len(data))])
+    y = np.array([data[i][0] for i in range(len(data))])
 
     data = CaffeTransform(x, y)
 

@@ -6,7 +6,7 @@ from torch.nn.parameter import Parameter
 
 
 class VaDE(torch.nn.Module):
-    def __init__(self, in_dim=784, latent_dim=10, n_classes=10):
+    def __init__(self, in_dim=784, latent_dim=20, n_classes=10):
         super(VaDE, self).__init__()
 
         self.pi_prior = Parameter(torch.ones(n_classes)/n_classes)

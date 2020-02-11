@@ -127,7 +127,41 @@ class TrainerVaDE:
             print('Testing VaDE... Epoch: {}, Loss: {}, Acc: {}'.format(epoch, 
                   total_loss/len(self.dataloader), acc[0]))
 
+    def compute_loss(self, x, x_hat, mu, log_var, z):
+        p_c = self.VaDE.pi_prior
+        gamma = self.compute_gamma(z, p_c)
 
+        log_p_x_given_z = F.binary_cross_entropy(x_hat, x, reduction='sum')
+        h = log_var.exp().unsqueeze(1) + (mu.unsqueeze(1) - self.VaDE.mu_prior).pow(2)
+        h = torch.sum(self.VaDE.log_var_prior + h / self.VaDE.log_var_prior.exp(), dim=2)
+        log_p_z_given_c = 0.5 * torch.sum(gamma * h)
+        log_p_c = torch.sum(gamma * torch.log(p_c + 1e-9))
+        log_q_c_given_x = torch.sum(gamma * torch.log(gamma + 1e-9))
+        log_q_z_given_x = 0.5 * torch.sum(1 + log_var)
+
+        loss = log_p_x_given_z + log_p_z_given_c - log_p_c +  log_q_c_given_x - log_q_z_given_x
+        loss /= x.size(0)
+        return loss
+
+    def compute_gamma(self, z, p_c):
+        h = (z.unsqueeze(1) - self.VaDE.mu_prior).pow(2) / self.VaDE.log_var_prior.exp()
+        h += self.VaDE.log_var_prior
+        h += torch.Tensor([np.log(np.pi*2)]).to(self.device)
+        p_z_c = torch.exp(torch.log(p_c + 1e-9).unsqueeze(0) - 0.5 * torch.sum(h, dim=2))
+        gamma = p_z_c / torch.sum(p_z_c, dim=1, keepdim=True)
+        return gamma
+
+
+    def cluster_acc(self, real, pred):
+        D = max(pred.max(), real.max())+1
+        w = np.zeros((D,D), dtype=np.int64)
+        for i in range(pred.size):
+            w[pred[i], real[i]] += 1
+        ind = linear_assignment(w.max() - w)
+        return sum([w[i,j] for i,j in ind])*1.0/pred.size*100, w
+
+
+"""
     def compute_loss(self, x, x_hat, mu, log_var, z):
         p_c = self.VaDE.pi_prior
         gamma = self.compute_gamma(z, p_c)
@@ -152,11 +186,6 @@ class TrainerVaDE:
         p_z_c = torch.exp(torch.log(p_c + 1e-9).unsqueeze(0) - 0.5 * torch.sum(h, dim=2))
         gamma = p_z_c / torch.sum(p_z_c + 1e-9, dim=1, keepdim=True)
         return gamma
+"""
 
-    def cluster_acc(self, real, pred):
-        D = max(pred.max(), real.max())+1
-        w = np.zeros((D,D), dtype=np.int64)
-        for i in range(pred.size):
-            w[pred[i], real[i]] += 1
-        ind = linear_assignment(w.max() - w)
-        return sum([w[i,j] for i,j in ind])*1.0/pred.size*100, w
+

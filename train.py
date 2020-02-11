@@ -141,7 +141,7 @@ class TrainerVaDE:
         log_q_c_given_x = torch.sum(gamma * torch.log(gamma + 1e-9))
         log_q_z_given_x = 0.5 * torch.sum(1 + log_var)
 
-        loss = log_p_x_given_z + log_p_z_given_c + log_p_c - log_q_c_given_x - log_q_z_given_x
+        loss = log_p_x_given_z + log_p_z_given_c - log_p_c + log_q_c_given_x - log_q_z_given_x
         loss /= x.size(0)
 
         return loss
@@ -149,7 +149,7 @@ class TrainerVaDE:
     def compute_gamma(self, z, p_c):
         h = (z.unsqueeze(1) - self.VaDE.mu_prior).pow(2) / self.VaDE.var_prior + \
             torch.log(2*np.pi*self.VaDE.var_prior)
-        p_z_c = torch.exp(torch.log(p_c + 1e-9).unsqueeze(0) - 0.5 * torch.sum(h, dim=2))
+        p_z_c = torch.exp(torch.log(p_c + 1e-9).unsqueeze(0) - 0.5 * torch.sum(h, dim=1))
         gamma = p_z_c / torch.sum(p_z_c + 1e-9, dim=1, keepdim=True)
         return gamma
 

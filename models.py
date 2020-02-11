@@ -11,7 +11,7 @@ class VaDE(torch.nn.Module):
 
         self.pi_prior = Parameter(torch.ones(n_classes)/n_classes)
         self.mu_prior = Parameter(torch.zeros(n_classes, latent_dim))
-        self.var_prior = Parameter(torch.ones(n_classes, latent_dim))
+        self.log_var_prior = Parameter(torch.randn(n_classes, latent_dim))
         
         self.fc1 = nn.Linear(in_dim, 512) #Encoder
         self.fc2 = nn.Linear(512, 512)

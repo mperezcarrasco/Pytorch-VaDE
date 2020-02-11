@@ -70,7 +70,7 @@ class TrainerVaDE:
         self.VaDE.load_state_dict(state_dict, strict=False)
         #self.VaDE.pi_prior.data = torch.from_numpy(self.gmm.weights_).float().to(self.device)
         self.VaDE.mu_prior.data = torch.from_numpy(self.gmm.means_).float().to(self.device)
-        self.VaDE.var_prior.data = torch.from_numpy(self.gmm.covars_).float().to(self.device)
+        self.VaDE.var_prior.data = torch.from_numpy(self.gmm.covariances_).float().to(self.device)
         torch.save(self.VaDE.state_dict(), self.args.pretrained_path)    
 
     def train(self):

@@ -68,9 +68,9 @@ class TrainerVaDE:
         state_dict = self.autoencoder.state_dict()
 
         self.VaDE.load_state_dict(state_dict, strict=False)
-        self.VaDE.pi_prior.data = torch.from_numpy(self.gmm.weights_).float().to(self.device)
+        #self.VaDE.pi_prior.data = torch.from_numpy(self.gmm.weights_).float().to(self.device)
         self.VaDE.mu_prior.data = torch.from_numpy(self.gmm.means_).float().to(self.device)
-        self.VaDE.log_var_prior.data = torch.log(torch.from_numpy(self.gmm.covariances_)).float().to(self.device)
+        self.VaDE.var_prior.data = torch.from_numpy(self.gmm.covars_).float().to(self.device)
         torch.save(self.VaDE.state_dict(), self.args.pretrained_path)    
 
     def train(self):
@@ -83,7 +83,7 @@ class TrainerVaDE:
             self.VaDE.apply(weights_init_normal)
         self.optimizer = optim.Adam(self.VaDE.parameters(), lr=self.args.lr)
         lr_scheduler = torch.optim.lr_scheduler.StepLR(
-                    self.optimizer, step_size=10, gamma=0.95)
+                    self.optimizer, step_size=10, gamma=0.90)
         print('Training VaDE...')
         for epoch in range(self.args.epochs):
             self.train_VaDE(epoch)
@@ -105,7 +105,7 @@ class TrainerVaDE:
             self.optimizer.step()
             total_loss += loss.item()
             print('After backward: {}'.format(self.VaDE.pi_prior))
-        print('Training VaDE... Epoch: {}, Loss: {}'.format(epoch, total_loss/len(dataloader)))
+        print('Training VaDE... Epoch: {}, Loss: {}'.format(epoch, total_loss/len(self.dataloader)))
 
 
     def test_VaDE(self, epoch):
@@ -133,23 +133,22 @@ class TrainerVaDE:
         gamma = self.compute_gamma(z, p_c)
 
         log_p_x_given_z = F.binary_cross_entropy(x_hat, x, reduction='sum')
-        h = (mu.unsqueeze(1) - self.VaDE.mu_prior).pow(2)
-        h += log_var.exp().unsqueeze(1)
-        h = torch.sum(self.VaDE.log_var_prior + h / self.VaDE.log_var_prior.exp(), dim=2)
-        log_p_z_given_c = 0.5 * torch.sum(gamma * h)
+        log_p_z_given_c = 0.5 * torch.sum(gamma * (mu.size(-1)*torch.log(2*np.pi) + \ 
+                          torch.log(self.VaDE.var_prior + 1e-9) + \
+                          log_var.exp().unsqueeze(1)/self.VaDE.var_prior + \
+                          (mu.unsqueeze(1) - self.VaDE.mu_prior).pow(2)/self.VaDE.var_prior))
         log_p_c = torch.sum(gamma * torch.log(p_c + 1e-9))
         log_q_c_given_x = torch.sum(gamma * torch.log(gamma + 1e-9))
         log_q_z_given_x = 0.5 * torch.sum(1 + log_var)
-        print(log_p_x_given_z, log_p_z_given_c, log_p_c, log_q_c_given_x, log_q_z_given_x)
+
         loss = log_p_x_given_z + log_p_z_given_c - log_p_c + log_q_c_given_x - log_q_z_given_x
         loss /= x.size(0)
 
         return loss
     
     def compute_gamma(self, z, p_c):
-        h = (z.unsqueeze(1) - self.VaDE.mu_prior).pow(2) / self.VaDE.log_var_prior.exp()
-        h += self.VaDE.log_var_prior
-        h += torch.Tensor([np.log(np.pi*2)]).to(self.device)
+        h = (z.unsqueeze(1) - self.VaDE.mu_prior).pow(2) / self.VaDE.var_prior + \
+            torch.log(2*np.pi*self.VaDE.var_prior)
         p_z_c = torch.exp(torch.log(p_c + 1e-9).unsqueeze(0) - 0.5 * torch.sum(h, dim=2))
         gamma = p_z_c / torch.sum(p_z_c + 1e-9, dim=1, keepdim=True)
         return gamma

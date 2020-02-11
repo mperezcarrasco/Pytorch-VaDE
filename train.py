@@ -132,7 +132,7 @@ class TrainerVaDE:
         p_c = self.VaDE.pi_prior
         gamma = self.compute_gamma(z, p_c)
 
-        log_p_x_given_z = F.binary_cross_entropy(x_hat, x, reduction='sum')
+        log_p_x_given_z = F.binary_cross_entropy(x_hat, x, reduction='sum') * x.size(1)
         log_p_z_given_c = 0.5 * torch.sum(gamma * torch.sum(mu.size(-1)*np.log(2*np.pi)\
                           + torch.log(self.VaDE.var_prior + 1e-9).unsqueeze(0)\
                           + log_var.exp().unsqueeze(1)/self.VaDE.var_prior\
@@ -149,7 +149,7 @@ class TrainerVaDE:
     def compute_gamma(self, z, p_c):
         h = (z.unsqueeze(1) - self.VaDE.mu_prior).pow(2) / self.VaDE.var_prior + \
             torch.log(2*np.pi*self.VaDE.var_prior)
-        p_z_c = torch.exp(torch.log(p_c + 1e-9).unsqueeze(0) - 0.5 * torch.sum(h, dim=1))
+        p_z_c = torch.exp(torch.log(p_c + 1e-9).unsqueeze(0) - 0.5 * torch.sum(h, dim=2))
         gamma = p_z_c / torch.sum(p_z_c + 1e-9, dim=1, keepdim=True)
         return gamma
 

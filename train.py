@@ -71,7 +71,7 @@ class TrainerVaDE:
         #self.VaDE.pi_prior.data = torch.from_numpy(self.gmm.weights_).float().to(self.device)
         self.VaDE.mu_prior.data = torch.from_numpy(self.gmm.means_).float().to(self.device)
         self.VaDE.var_prior.data = torch.from_numpy(self.gmm.covariances_).float().to(self.device)
-        torch.save(self.VaDE.state_dict(), self.args.pretrained_path)    
+        torch.save(self.VaDE.state_dict(), self.args.pretrained_path)
 
     def train(self):
         """Training the VaDE
@@ -133,14 +133,10 @@ class TrainerVaDE:
         gamma = self.compute_gamma(z, p_c)
 
         log_p_x_given_z = F.binary_cross_entropy(x_hat, x, reduction='sum')
-        print('log var prior: ', torch.log(self.VaDE.var_prior + 1e-9), torch.log(self.VaDE.var_prior + 1e-9).shape)
-        print('var prior: ', self.VaDE.var_prior) 
-        print('var model: ', log_var.exp())     
-        print('varmodel /varprior: ', log_var.exp().unsqueeze(1)/self.VaDE.var_prior) 
-        log_p_z_given_c = 0.5 * torch.sum(gamma * (mu.size(-1)*torch.log(2*np.pi)\
-                          + torch.log(self.VaDE.var_prior + 1e-9)\
+        log_p_z_given_c = 0.5 * torch.sum(gamma * torch.sum(mu.size(-1)*np.log(2*np.pi)\
+                          + torch.log(self.VaDE.var_prior + 1e-9).unsqueeze(0)\
                           + log_var.exp().unsqueeze(1)/self.VaDE.var_prior\
-                          + (mu.unsqueeze(1) - self.VaDE.mu_prior).pow(2)/self.VaDE.var_prior))
+                          + (mu.unsqueeze(1) - self.VaDE.mu_prior).pow(2)/self.VaDE.var_prior, dim=2))
         log_p_c = torch.sum(gamma * torch.log(p_c + 1e-9))
         log_q_c_given_x = torch.sum(gamma * torch.log(gamma + 1e-9))
         log_q_z_given_x = 0.5 * torch.sum(1 + log_var)

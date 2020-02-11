@@ -26,7 +26,7 @@ if __name__ == '__main__':
     dataloader = get_mnist(batch_size=args.batch_size)
     
     vade = TrainerVaDE(args, device, dataloader)
-    if args.pretrain==True:
-        vade.pretrain()
+    #if args.pretrain==True:
+    #    vade.pretrain()
     vade.train()
 

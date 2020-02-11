@@ -55,7 +55,7 @@ class TrainerVaDE:
         the priors (pi, mu, var) of the VaDE model.
         """
         print('Fiting Gaussian Mixture Model...')
-        x = torch.cat([data[0] for data in self.dataloader]).to(self.device) #all x samples.
+        x = torch.cat([data[0] for data in self.dataloader]).view(-1, 784).to(self.device) #all x samples.
         z = self.autoencoder.encode(x)
         self.gmm = GaussianMixture(n_components=10, covariance_type='diag')
         self.gmm.fit(z.cpu().detach().numpy())
@@ -71,10 +71,10 @@ class TrainerVaDE:
         self.VaDE.pi_prior.data = torch.from_numpy(self.gmm.weights_).float().to(self.device)
         self.VaDE.mu_prior.data = torch.from_numpy(self.gmm.means_).float().to(self.device)
         self.VaDE.log_var_prior.data = torch.log(torch.from_numpy(self.gmm.covariances_)).float().to(self.device)
-        torch.save(self.VaDE.state_dict(), self.args.pretrained_path)
+        torch.save(self.VaDE.state_dict(), self.args.pretrained_path)    
 
     def train(self):
-        """Training the VaDE
+        """
         """
         if self.args.pretrain==True:
             self.VaDE.load_state_dict(torch.load(self.args.pretrained_path,
@@ -83,7 +83,7 @@ class TrainerVaDE:
             self.VaDE.apply(weights_init_normal)
         self.optimizer = optim.Adam(self.VaDE.parameters(), lr=self.args.lr)
         lr_scheduler = torch.optim.lr_scheduler.StepLR(
-                    self.optimizer, step_size=10, gamma=0.90)
+                    self.optimizer, step_size=10, gamma=0.9)
         print('Training VaDE...')
         for epoch in range(self.args.epochs):
             self.train_VaDE(epoch)
@@ -99,13 +99,13 @@ class TrainerVaDE:
             self.optimizer.zero_grad()
             x = x.to(self.device)
             x_hat, mu, log_var, z = self.VaDE(x)
-            print('Before backward: {}'.format(self.VaDE.pi_prior))
+            #print('Before backward: {}'.format(self.VaDE.pi_prior))
             loss = self.compute_loss(x, x_hat, mu, log_var, z)
             loss.backward()
             self.optimizer.step()
             total_loss += loss.item()
-            print('After backward: {}'.format(self.VaDE.pi_prior))
-        print('Training VaDE... Epoch: {}, Loss: {}'.format(epoch, total_loss/len(self.dataloader)))
+            #print('After backward: {}'.format(self.VaDE.pi_prior))
+        print('Training VaDE... Epoch: {}, Loss: {}'.format(epoch, total_loss))
 
 
     def test_VaDE(self, epoch):
@@ -124,8 +124,8 @@ class TrainerVaDE:
                 y_pred.extend(pred.cpu().detach().numpy())
 
             acc = self.cluster_acc(np.array(y_true), np.array(y_pred))
-            print('Testing VaDE... Epoch: {}, Loss: {}, Acc: {}'.format(epoch, 
-                  total_loss/len(self.dataloader), acc[0]))
+            print('Testing VaDE... Epoch: {}, Loss: {}, Acc: {}'.format(epoch, total_loss, acc[0]))
+
 
     def compute_loss(self, x, x_hat, mu, log_var, z):
         p_c = self.VaDE.pi_prior
@@ -142,7 +142,7 @@ class TrainerVaDE:
         loss = log_p_x_given_z + log_p_z_given_c - log_p_c +  log_q_c_given_x - log_q_z_given_x
         loss /= x.size(0)
         return loss
-
+    
     def compute_gamma(self, z, p_c):
         h = (z.unsqueeze(1) - self.VaDE.mu_prior).pow(2) / self.VaDE.log_var_prior.exp()
         h += self.VaDE.log_var_prior
@@ -150,7 +150,6 @@ class TrainerVaDE:
         p_z_c = torch.exp(torch.log(p_c + 1e-9).unsqueeze(0) - 0.5 * torch.sum(h, dim=2))
         gamma = p_z_c / torch.sum(p_z_c, dim=1, keepdim=True)
         return gamma
-
 
     def cluster_acc(self, real, pred):
         D = max(pred.max(), real.max())+1

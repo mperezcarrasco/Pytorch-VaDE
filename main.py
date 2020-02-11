@@ -13,7 +13,7 @@ if __name__ == '__main__':
                         help="Patience for Early Stopping")
     parser.add_argument('--lr', type=float, default=2e-3,
                         help='learning rate')
-    parser.add_argument("--batch_size", type=int, default=100, 
+    parser.add_argument("--batch_size", type=int, default=128, 
                         help="Batch size")
     parser.add_argument('--pretrain', type=bool, default=True,
                         help='learning rate')

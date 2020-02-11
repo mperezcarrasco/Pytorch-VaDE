@@ -16,8 +16,8 @@ def get_mnist(data_dir='./data/mnist/', batch_size=128):
     dataset['x'] = x
     dataset['y'] = y
 
-    dataloader = DataLoader(TensorDataset(x,y), batch_size=batch_size, 
-                            shuffle=True, num_workers=0)
+    dataloader=DataLoader(TensorDataset(x,y), batch_size=batch_size, 
+                          shuffle=True, num_workers=4)
     return dataloader
 
 
@@ -30,7 +30,7 @@ def get_webcam(data_dir='./data/office31/webcam/images/', batch_size=128):
     data = CaffeTransform(x, y)
 
     dataloader = DataLoader(data, batch_size=batch_size, 
-                          shuffle=True, num_workers=0)
+                          shuffle=True, num_workers=4)
     return dataloader
 
 

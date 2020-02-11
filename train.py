@@ -77,8 +77,8 @@ class TrainerVaDE:
         """Training the VaDE
         """
         if self.args.pretrain==True:
-            #self.VaDE.load_state_dict(torch.load(self.args.pretrained_path,
-            #                                     map_location=self.device))
+            self.VaDE.load_state_dict(torch.load(self.args.pretrained_path,
+                                                 map_location=self.device))
             pass
         else:
             self.VaDE.apply(weights_init_normal)

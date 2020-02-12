@@ -34,7 +34,7 @@ if __name__ == '__main__':
         n_classes = 31
     
     vade = TrainerVaDE(args, device, dataloader, n_classes)
-    #if args.pretrain==True:
-    #    vade.pretrain()
+    if args.pretrain==True:
+        vade.pretrain()
     vade.train()
 

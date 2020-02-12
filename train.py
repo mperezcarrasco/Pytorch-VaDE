@@ -11,8 +11,6 @@ def weights_init_normal(m):
     classname = m.__class__.__name__
     if classname.find("Linear") != -1:
         torch.nn.init.normal_(m.weight.data, 0.0, 0.02)
-    elif classname.find("Conv") != -1:
-        torch.nn.init.normal_(m.weight.data, 0.0, 0.02)
 
 class TrainerVaDE:
     """This is the trainer for the Variational Deep Embedding (VaDE).
@@ -21,6 +19,7 @@ class TrainerVaDE:
         if args.dataset == 'mnist':
             from models import Autoencoder, VaDE
             self.autoencoder = Autoencoder().to(device)
+            self.autoencoder.apply(weights_init_normal)
             self.VaDE = VaDE().to(device)
         elif args.dataset == 'webcam':
             from models_office import Autoencoder, VaDE, feature_extractor
@@ -47,7 +46,6 @@ class TrainerVaDE:
         and the models are likely to get stuck in local minima.
         """
         optimizer = optim.Adam(self.autoencoder.parameters(), lr=0.002)
-        self.autoencoder.apply(weights_init_normal) #intializing weights using normal distribution.
         self.autoencoder.train()
         print('Training the autoencoder...')
         for epoch in range(30):

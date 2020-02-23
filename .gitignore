@@ -1,4 +1,3 @@
 data/*
 weights/*
 MNIST/*
-__pycache__/*

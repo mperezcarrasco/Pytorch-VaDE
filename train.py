@@ -48,7 +48,7 @@ class TrainerVaDE:
         optimizer = optim.Adam(self.autoencoder.parameters(), lr=0.002)
         self.autoencoder.train()
         print('Training the autoencoder...')
-        for epoch in range(30):
+        for epoch in range(1500):
             total_loss = 0
             for x, _ in self.dataloader:
                 optimizer.zero_grad()
@@ -155,7 +155,7 @@ class TrainerVaDE:
 
     def compute_loss(self, x, x_hat, mu, log_var, z):
         p_c = self.VaDE.pi_prior
-        gamma = self.compute_gamma(z, p_c); print(gamma)
+        gamma = self.compute_gamma(z, p_c)
 
         log_p_x_given_z = F.mse_loss(x_hat, x, reduction='sum')
         h = log_var.exp().unsqueeze(1) + (mu.unsqueeze(1) - self.VaDE.mu_prior).pow(2)
@@ -168,12 +168,12 @@ class TrainerVaDE:
         loss = log_p_x_given_z + log_p_z_given_c - log_p_c +  log_q_c_given_x - log_q_z_given_x
         loss /= x.size(0)
         return loss
-    
+
     def compute_gamma(self, z, p_c):
         h = (z.unsqueeze(1) - self.VaDE.mu_prior).pow(2) / self.VaDE.log_var_prior.exp()
         h += self.VaDE.log_var_prior
         h += torch.Tensor([np.log(np.pi*2)]).to(self.device)
-        p_z_c = torch.exp(torch.log(p_c + 1e-9).unsqueeze(0) - 0.5 * torch.sum(h, dim=2)) + 1e-9
+        p_z_c = torch.exp(torch.log(p_c + 1e-15).unsqueeze(0) - 0.5 * torch.sum(h, dim=2)) + 1e-20
         gamma = p_z_c / torch.sum(p_z_c, dim=1, keepdim=True)
         return gamma
 

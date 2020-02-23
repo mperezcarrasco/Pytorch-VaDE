@@ -5,7 +5,7 @@ from torch.nn.parameter import Parameter
 
 
 class VaDE(nn.Module):
-    def __init__(self, conv_dim=64, latent_dim=256, n_classes=31):
+    def __init__(self, conv_dim=64, latent_dim=10, n_classes=31):
         super(VaDE, self).__init__()
         self.pi_prior = Parameter(torch.ones(n_classes)/n_classes)
         self.mu_prior = Parameter(torch.randn(n_classes, latent_dim))
@@ -45,7 +45,7 @@ class VaDE(nn.Module):
         h = h.view(-1, 512, 1, 1)
         h = F.relu(self.cnn6(h))
         h = F.relu(self.cnn7(h))
-        return F.relu(self.cnn8(h))
+        return F.sigmoid(self.cnn8(h))
 
     def forward(self, x):
         mu, log_var = self.encode(x)
@@ -54,7 +54,7 @@ class VaDE(nn.Module):
         return x_reconst, mu, log_var, z
 
 class Autoencoder(nn.Module):
-    def __init__(self, conv_dim=64, latent_dim=256):
+    def __init__(self, conv_dim=64, latent_dim=10):
         super(Autoencoder, self).__init__()
         self.cnn4 = Conv(conv_dim*6, conv_dim*6, 3, 1, 1, groups=2, bn=False)
         self.cnn5 = Conv(conv_dim*6, conv_dim*4, 3, 1, 1, groups=2, bn=False)
@@ -103,7 +103,7 @@ class feature_extractor(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2),
             nn.LocalResponseNorm(size=5, alpha=1e-04, beta=0.75, k=1),
             nn.Conv2d(256, 384, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True)
+            nn.Sigmoid()
             )
     def forward(self, x):
         return self.features(x)
